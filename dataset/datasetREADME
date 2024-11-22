@@ -1,0 +1,16 @@
+https://www.kaggle.com/datasets/pankrzysiu/cifar10-python
+
+Please use this link to download the dataset.
+Place the download "archive" into the dataset file.
+Unzip the "archive" file.
+Delete the original "archive" file.
+
+The .gitignore should exclude the dataset from being added to git,
+however if it does not then please DO NOT commit them to the repo as
+they are relatively large files.
+
+The dataset used has been sourced from:
+Learning Multiple Layers of Features from Tiny Images, Alex Krizhevsky, 2009.
+Accessed 22/11/24
+https://www.cs.toronto.edu/~kriz/cifar.html
+
