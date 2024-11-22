@@ -7,3 +7,6 @@
 /dataSources/
 /dataSources.local.xml
 /.idea
+/*.iml
+/.vscode
+/.ipynb_checkpoints
