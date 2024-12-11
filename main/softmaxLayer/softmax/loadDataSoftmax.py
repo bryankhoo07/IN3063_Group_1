@@ -1,0 +1,2 @@
+def loadDataSoftmax():
+    pass
