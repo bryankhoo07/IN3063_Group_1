@@ -5,7 +5,7 @@ class softmaxLayer:
         pass
 
     def forwardPass(self):
-        return None
+        exp_logits = np.exp(logits - np.max(logits, axis = 1, keepdims=True))
 
     def backwardPass(self):
         return None
