@@ -13,7 +13,7 @@
 /.vscode
 # Jupyter
 /.ipynb_checkpoints
-/dataset/cifar-10-python.tar
+/dataset/cifar-10-python.tar.gz
 /dataset/cifar-10-python.tar.gz
 /dataset/cifar-10-batches-py
 *.pyc
