@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from dropout import Dropout
 
 class TestDropout(unittest.TestCase):
     def test_inference(self):

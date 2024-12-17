@@ -26,7 +26,10 @@ class Dropout:
         if training:
             # Generate binary mask and scale it
             self.binary_mask = np.random.binomial(1, self.rate, size=inputs.shape)
-            self.output = inputs * self.binary_mask / self.rate
+            if self.rate == 0:
+                self.output = 0
+            else:
+                self.output = inputs * self.binary_mask / self.rate
         else:
             # No dropout during inference
             self.output = inputs
