@@ -1,9 +1,9 @@
 import numpy as np
 
-from main.ReLuLayer.ReLu.ReLu import ReLuLayer
-from main.Sigmoid.Sigmoid.Sigmoid import SigmoidLayer
-from main.dropout import dropout
-from main.softmaxLayer.softmax.softmax import SoftmaxLayer
+from task_1.ReLuLayer.ReLu.ReLu import ReLuLayer
+from task_1.Sigmoid.Sigmoid.Sigmoid import SigmoidLayer
+from task_1.dropout import dropout
+from task_1.softmaxLayer.softmax.softmax import SoftmaxLayer
 
 
 class fully_connected_NN:
