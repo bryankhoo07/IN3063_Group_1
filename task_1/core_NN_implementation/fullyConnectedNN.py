@@ -2,21 +2,21 @@ import numpy as np
 
 from task_1.ReLuLayer.ReLu.ReLu import ReLuLayer
 from task_1.Sigmoid.Sigmoid.Sigmoid import SigmoidLayer
-from task_1.dropout import dropout
+from task_1.dropout.dropout import Dropout
 from task_1.softmaxLayer.softmax.softmax import SoftmaxLayer
 
 
-class fully_connected_NN:
-    def __init__(self, input_size, output_size, learning_rate, hidden_layers, dropout_rate, regularization_rate):
+class fullyConnectedNN:
+    def __init__(self, input_size, output_size, hidden_layers, learning_rate = 0.001, dropout_rate = 0.05, regularization_rate = 0.01):
         """
         Parameters:
 
-        input_size
-        output_size
-        learning_rate
-        hidden_layers
-        dropout_rate
-        regularization_rate (L2)
+        input_size (int): Number of input features
+        output_size (int): Number of output neurons
+        hidden_layers (list): List of hidden layer sizes
+        learning_rate (float): Learning rate
+        dropout_rate (float): Dropout rate
+        regularization_rate (float): L2 regularization rate
         """
 
         # Init params
@@ -28,7 +28,7 @@ class fully_connected_NN:
         self.regularization_rate = regularization_rate
 
         # Init dropout
-        self.dropout = dropout.Dropout(rate = dropout_rate)
+        self.dropout = Dropout(rate = dropout_rate)
 
         #Init activation layers
         self.softmax_layer = SoftmaxLayer()
@@ -38,6 +38,10 @@ class fully_connected_NN:
         # Init weights and biases
         self.weights = []
         self.biases = []
+        self.layer_sizes = [input_size] + hidden_layers + [output_size]
+        for i in range (len(self.layer_sizes)-1):
+            self.weights.append(np.random.randn(self.layer_sizes[i], self.layer_sizes[i+1]) * 0.01)
+            self.biases.append(np.zeros((1, self.layer_sizes[i+1])))
 
     def forward_propagation(self):
         pass
