@@ -1,16 +1,17 @@
 import numpy as np
 
 class SoftmaxLayer:
+
     def __init__(self):
         pass
 
-    def forward(self, inputs):
-        shifted_inputs = inputs - np.max(inputs, axis=1, keepdims=True)
-        exp_values = np.exp(shifted_inputs)
+    def forward_pass(self, inputs):
+        stabilized_inputs = inputs - np.max(inputs, axis=1, keepdims=True)
+        exp_values = np.exp(stabilized_inputs)
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         return probabilities
 
-    def backward(self, dvalues, output):
+    def backward_pass(self, dvalues, output):
         batch_size = dvalues.shape[0]
         gradients = np.empty_like(dvalues)
 
