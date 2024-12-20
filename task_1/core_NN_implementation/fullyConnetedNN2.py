@@ -1,9 +1,12 @@
 import numpy as np
 
+from dataset.datasetLoader import load_cifar10
 from task_1.ReLuLayer.ReLu.ReLu import ReLuLayer
 from task_1.Sigmoid.Sigmoid.Sigmoid import SigmoidLayer
+from task_1.core_NN_implementation.fullyConnectedNN import fullyConnectedNN
 from task_1.dropout.dropout import Dropout
-from task_1.softmaxLayer.softmax.softmax import SoftmaxLayer
+from task_1.softmaxLayer import SoftmaxLayer
+
 
 
 class fullyConnectedNN:
@@ -27,6 +30,7 @@ class fullyConnectedNN:
         self.dropout_rate = dropout_rate
         self.regularization = regularization
         self.regularization_rate = 0.01
+        self.optimizer = 'sgd'
 
         # Init activation layers
 
@@ -36,28 +40,33 @@ class fullyConnectedNN:
             'softmax': SoftmaxLayer(),
         }
 
-
-        if activations == None:
-            self.activations = ['relu'] * hidden_layers *['softmax']
+        if activations is None:
+            # Create list of layer objects
+            self.activations = []
+            # Add ReLU for each hidden layer
+            for _ in range(len(hidden_layers)):
+                self.activations.append('relu')
+            # Add softmax for output layer
+            self.activations.append('softmax')
         else:
             self.activations = activations
 
         # Init dropout
-        self.dropout = Dropout(rate = dropout_rate)
-
-
+        self.dropout_rate = dropout_rate
+        if dropout_rate is not None:
+            self.dropout = Dropout(rate=dropout_rate)
+        else:
+            self.dropout = None
 
         # Structure
         self.layer_sizes = [input_size] + hidden_layers + [output_size]
 
         # Init weights and biases
-        self.weights = [np.random.randn(self.layer_sizes[i], self.layer_sizes[i + 1]) * 0.012
+        self.weights = [np.random.randn(self.layer_sizes[i], self.layer_sizes[i + 1]) * 0.01
                         for i in range(len(self.layer_sizes) - 1)]
         self.biases = [np.zeros((1, self.layer_sizes[i + 1])) for i in range(len(self.layer_sizes) - 1)]
 
-
-    def forward_propagation(self, X, training = True):
-
+    def forward_propagation(self, X, training=True):
         inputs = X
         # Stores outputs to be used for backward pass
         self.layer_outputs = []
@@ -70,9 +79,9 @@ class fullyConnectedNN:
             activation = self.activations[i]
             a = self.activation_layer[activation].forward(z)
 
-            # Use dropout when training
-            if training:
-                self.dropout.forward(a, training=training)
+            # Use dropout when training and if dropout is enabled
+            if training and self.dropout is not None:
+                a = self.dropout.forward(a)
                 inputs = self.dropout.output
             else:
                 inputs = a
@@ -81,7 +90,7 @@ class fullyConnectedNN:
 
         # Softmax
         z_final = np.dot(inputs, self.weights[-1]) + self.biases[-1]
-        predictions = self.activation_layer['softmax'].forward_pass(z_final)
+        predictions = self.activation_layer['softmax'].forward(z_final)
 
         # Softmax output
         self.layer_outputs.append(predictions)
@@ -102,7 +111,6 @@ class fullyConnectedNN:
             # Gradient with respect to biases
             db = np.sum(dz, axis=0, keepdims=True) / m
 
-
             if self.regularization == 'L2':
                 # L2 Regularization for weights
                 dw += self.regularization_rate * self.weights[i]
@@ -110,21 +118,15 @@ class fullyConnectedNN:
                 # L1 Regularization for weights
                 dw += self.regularization_rate * np.sign(self.weights[i])
 
-            # Update weights and biases
-            if self.optimizer == 'sgd':
-                self.weights[i] -= self.learning_rate * dw
-                self.biases[i] -= self.learning_rate * db
-            elif self.optimizer == 'adam':
-                 # Adam optimizer (requires moment estimates for Adam)
-                pass
-            else:
-                pass
-
+            # Update weights and biases using SGD
+            # Remove optimizer conditional since we're only using SGD
+            self.weights[i] -= self.learning_rate * dw
+            self.biases[i] -= self.learning_rate * db
 
             # Propagate the error gradient to the previous layer
             if i > 0:
-                dz = np.dot(dz, self.weights[i].T) * self.activation_derivative(self.layer_outputs[i - 1], function = 'relu')
-
+                dz = np.dot(dz, self.weights[i].T) * self.activation_derivative(
+                    self.layer_outputs[i - 1], function='relu')
 
     def activation_derivative(self, activation_output, function='relu'):
         # ReLU: 1 = positive input, else 0
@@ -152,21 +154,54 @@ class fullyConnectedNN:
             regularization_loss = 0.5 * self.regularization_rate * sum(np.sum(w) for w in self.weights)
         return loss + regularization_loss
 
-    def train(self, X, y, epochs,batch_size=64):
+    def train(self, X, y, epochs, batch_size=64, X_val=None, y_val=None):
+        history = {
+            'loss': [],
+            'accuracy': [],
+            'val_loss': [],
+            'val_accuracy': [],
+        }
         for epoch in range(epochs):
-            #mini batch train
-            for i in range(0,X.shape[0],batch_size):
-                x_batch=X[i:i+batch_size]
-                y_batch=y[i:i+batch_size]
-            # Forward pass
-                y_pred = self.forward_propagation(X, training=True)
+            epoch_loss = 0
+            num_batches = 0
 
-            # Loss
-                loss = self.calculate_loss(y, y_pred)
+            # Mini-batch training
+            for i in range(0, X.shape[0], batch_size):
+                x_batch = X[i:i + batch_size]
+                y_batch = y[i:i + batch_size]
 
-            # Backward pass
-                self.backward_propagation(X, y)
-                print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss:.4f}")
+                # Forward pass
+                y_pred = self.forward_propagation(x_batch, training=True)
+
+                # Loss
+                loss = self.calculate_loss(y_batch, y_pred)
+                epoch_loss += loss
+
+                # Backward pass
+                self.backward_propagation(x_batch, y_batch)
+
+                num_batches += 1
+
+            # Average loss for the epoch
+            epoch_loss /= num_batches
+            history['loss'].append(epoch_loss)
+
+            # Compute training accuracy
+            train_predictions = self.predict(X)
+            train_accuracy = np.mean(train_predictions == np.argmax(y, axis=1))
+            history['accuracy'].append(train_accuracy)
+
+            # Compute validation loss and accuracy if validation data is provided
+            if X_val is not None and y_val is not None:
+                val_loss, val_accuracy = self.evaluate(X_val, y_val)
+                history['val_loss'].append(val_loss)
+                history['val_accuracy'].append(val_accuracy)
+                print(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, "
+                      f"Accuracy: {train_accuracy:.4f}, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
+            else:
+                print(f"Epoch {epoch + 1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {train_accuracy:.4f}")
+
+        return history
 
     def evaluate(self, X, y):
         # Predict and compute loss
@@ -181,3 +216,4 @@ class fullyConnectedNN:
     def predict(self, X):
         probabilities = self.forward_propagation(X, training=False)
         return np.argmax(probabilities, axis=1)
+
