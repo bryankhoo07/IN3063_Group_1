@@ -20,3 +20,4 @@ class SoftmaxLayer:
             gradients[i] = np.dot(jacobian_matrix, dvalues[i])
 
         return gradients
+
