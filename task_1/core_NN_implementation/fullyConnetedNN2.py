@@ -1,6 +1,5 @@
 import numpy as np
 
-from dataset.datasetLoader import load_cifar10
 from task_1.ReLuLayer.ReLu.ReLu import ReLuLayer
 from task_1.Sigmoid.Sigmoid.Sigmoid import SigmoidLayer
 from task_1.core_NN_implementation.fullyConnectedNN import fullyConnectedNN
@@ -90,7 +89,7 @@ class fullyConnectedNN:
 
         # Softmax
         z_final = np.dot(inputs, self.weights[-1]) + self.biases[-1]
-        predictions = self.activation_layer['softmax'].forward(z_final)
+        predictions = self.activation_layer['softmax'].forward_pass(z_final)
 
         # Softmax output
         self.layer_outputs.append(predictions)
